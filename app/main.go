@@ -26,7 +26,6 @@ func main() {
 		os.Exit(1)
 	}
 	path, err := extractURLPath(conn)
-
 	if err != nil {
 		fmt.Println("Error extracting url path from request: ", err)
 		os.Exit(1)
@@ -57,6 +56,13 @@ func extractURLPath(conn net.Conn) (string, error) {
 func handlePath(path string) []byte {
 	if path == "/" {
 		return []byte("HTTP/1.1 200 OK\r\n\r\n")
+	} else if str, ok := strings.CutPrefix(path, "/echo/"); ok {
+		resp := "HTTP/1.1 200 OK" + CRLF
+		resp += "Content-Type: text/plain" + CRLF
+		resp += fmt.Sprintf("Content-Length: %v", len(str)) + CRLF
+		resp += CRLF
+		resp += str
+		return []byte(resp)
 	} else {
 		return []byte("HTTP/1.1 404 Not Found\r\n\r\n")
 	}
