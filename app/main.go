@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 )
+
+var CRLF = "\r\n"
 
 func main() {
 	fmt.Println("Logs from HTTP Server")
@@ -22,6 +25,39 @@ func main() {
 		fmt.Println("Error accepting connection: ", err.Error())
 		os.Exit(1)
 	}
+	path, err := extractURLPath(conn)
 
-	conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
+	if err != nil {
+		fmt.Println("Error extracting url path from request: ", err)
+		os.Exit(1)
+	}
+
+	resp := handlePath(path)
+
+	conn.Write(resp)
+}
+
+func extractURLPath(conn net.Conn) (string, error) {
+	rcvBuff := make([]byte, 1024)
+
+	_, err := conn.Read(rcvBuff)
+
+	if err != nil {
+		return "", err
+	}
+
+	req := string(rcvBuff)
+
+	lines := strings.Split(req, CRLF)
+	path := strings.Split(lines[0], " ")[1]
+
+	return path, nil
+}
+
+func handlePath(path string) []byte {
+	if path == "/" {
+		return []byte("HTTP/1.1 200 OK\r\n\r\n")
+	} else {
+		return []byte("HTTP/1.1 404 Not Found\r\n\r\n")
+	}
 }
