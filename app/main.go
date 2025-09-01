@@ -90,6 +90,8 @@ func route(req *HttpRequest) *HttpResponse {
 	} else if hasPrefix(req.URL, "/echo") {
 		path := extractEcho(req.URL[5:])
 		return buildResponseWithBody(200, req.Version, []byte(path), "text/plain")
+	} else if hasPrefix(req.URL, "/user-agent") {
+		return buildResponseWithBody(200, req.Version, []byte(req.Headers["User-Agent"]), "text/plain")
 	} else {
 		return buildResponse(404, req.Version)
 	}
