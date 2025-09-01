@@ -19,12 +19,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	conn, err := l.Accept()
+	for {
+		conn, err := l.Accept()
 
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
+		if err != nil {
+			fmt.Println("Error accepting connection: ", err.Error())
+			os.Exit(1)
+		}
+
+		go do(conn)
 	}
+}
+
+func do(conn net.Conn) {
+	defer conn.Close()
+
 	path, err := extractURLPath(conn)
 	if err != nil {
 		fmt.Println("Error extracting url path from request: ", err)
@@ -57,6 +66,7 @@ func handlePath(path string) []byte {
 	if path == "/" {
 		return []byte("HTTP/1.1 200 OK\r\n\r\n")
 	} else if str, ok := strings.CutPrefix(path, "/echo/"); ok {
+		str += CRLF
 		resp := "HTTP/1.1 200 OK" + CRLF
 		resp += "Content-Type: text/plain" + CRLF
 		resp += fmt.Sprintf("Content-Length: %v", len(str)) + CRLF
